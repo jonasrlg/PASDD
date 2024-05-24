@@ -1,0 +1,32 @@
+% Simple example of a tight logic program encoding
+% the following distribution (zero prob. conf. omitted)
+%
+% a b c d e f Prob
+% -----------------
+% 0 0 0 0 0 0 0.25
+% 1 0 1 0 0 0 0.125
+% 1 0 0 1 0 0 0.125
+% 0 1 0 0 1 0 0.125
+% 0 1 0 0 0 1 0.125
+% 1 1 1 0 0 1 0.125
+% 1 1 0 1 1 0 0.125
+
+% Probabilistic variables
+    0.5::a.  
+    0.5::b.
+
+% Logical variables
+    c :- not d, a.     
+    d :- not c, a.
+    e :- not f, b.     
+    f :- not e, b.
+
+% Constraints
+    :- c, e.       
+    :- d, f.
+    
+% 7 Models
+%    -a -b => -c, -d, -e, -f 
+%     a -b => {c, -d, -e, -f}, {-c, d, -e, -f}
+%    -a  b => {-c, -d, e, -f}, {-c, -d, -e, -f}
+%     a  b => {c -d, -e, f}, {-c, d, e, -f}

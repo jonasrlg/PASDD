@@ -1,0 +1,50 @@
+% Encoding of Monty Hall Problem - Tight Logic Program
+% A prize is randomly placed behind 1 of 3 doors
+% 1/3::prize(1); 1/3::prize(2); 1/3::prize(3).
+0.333333333::prize(1).
+0.5::auxprize(2).
+prize(2) :- auxprize, not prize(1).
+prize(3) :- not prize(1), not prize(2).
+% Each door hides either a prize or a goat 
+goat(1) :- not prize(1).
+goat(2) :- not prize(2).
+goat(3) :- not prize(3).
+% The participant selects some door at random
+0.333333333::select(1).
+0.5::auxselect(2).
+select(2) :- auxselect, not select(1).
+select(3) :- not select(1), not select(2).
+% The host opens some door
+open(1) :- not open(2), not open(3).
+open(2) :- not open(1), not open(3).
+open(3) :- not open(1), not open(2).
+% which does not hide the prize
+false :- prize(1), open(1), not false.
+false :- prize(2), open(2), not false.
+false :- prize(3), open(3), not false.
+% and has not been selected by the participant 
+false :- open(1), select(1), not false.
+false :- open(2), select(2), not false.
+false :- open(3), select(3), not false.
+% The host offers a choice to change 
+choice(1) :- not choice(2), not choice(3).
+choice(2) :- not choice(1), not choice(3).
+choice(3) :- not choice(1), not choice(2).
+% to some other door that is not open
+false :- choice(1), open(1), not false.
+false :- choice(2), open(2), not false.
+false :- choice(3), open(3), not false.
+% and that has not been selected
+false :- choice(1), select(1), not false.
+false :- choice(2), select(2), not false.
+false :- choice(3), select(3), not false.
+% The participant wins if the initial door
+% selected has the prize and she does not take 
+% the offer to change doors
+win(keep) :- select(1), prize(1).
+win(keep) :- select(2), prize(2).
+win(keep) :- select(3), prize(3).
+% or if she changes to the door with the prize 
+win(change) :- choice(1), prize(1).
+win(change) :- choice(2), prize(2).
+win(change) :- choice(3), prize(3).
