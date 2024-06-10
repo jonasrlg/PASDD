@@ -1,74 +1,5 @@
 using LogicCircuits
 using ProgressBars
-using TikzPictures
-using Graphs
-using TikzGraphs
-
-function Graphs.DiGraph(vtree::Vtree)
-    N = num_nodes(vtree)
-    g = DiGraph(N)
-    nv = num_variables(vtree)
-    id = nv
-    dict = Dict{PlainVtreeInnerNode, Int}()
-    if id < N 
-        dict[vtree] = (id += 1)
-    end
-
-    convert_rec(v::PlainVtreeLeafNode) = ()
-    convert_rec(v::PlainVtreeInnerNode) = begin
-        foreach(children(v)) do c
-            c_id = isleaf(c) ? variable(c) : dict[c] = (id += 1)
-            add_edge!(g, dict[v], c_id)
-            convert_rec(c)
-        end
-    end
-
-    convert_rec(vtree)
-    @assert id == N
-    label = [["$i" for i in 1 : nv];fill(".", nv - 1)]
-    g, label
-end
-
-function getVal(d::Dict, k; default="error")
-    println(k)
-    return get(d, k, default)
-end
-
-function Graphs.DiGraph(lc::LogicCircuit; on_edge=noop, on_var=noop)
-    nv = num_variables(lc)
-    nn = num_nodes(lc)
-    g = DiGraph(nn)
-    id = 0
-    dict = Dict{LogicCircuit, Int}()
-    label = Vector{String}(undef, nn)
-    dict[lc] = (id += 1)
-    
-    add_label!(g, dict, c::LogicCircuit) = begin
-        label[dict[c]] = 
-            if isliteralgate(c) getVal(names_dict, literal(c), default="error")
-        elseif istrue(c)  "T"
-        elseif isfalse(c)  "F"
-        elseif is⋁gate(c) "⋁"
-        else "⋀"
-        end
-    end
-
-    if on_var == noop 
-        on_var = add_label!
-    end
-    
-    foreach_down(lc) do n
-        on_var(g, dict, n)
-        if has_children(n)
-            foreach(children(n)) do c
-                c_id = haskey(dict, c) ? dict[c] : dict[c] = (id += 1)
-                add_edge!(g, dict[n], c_id)
-                on_edge(g, dict, n, c, dict[n], c_id)
-            end
-        end
-    end
-    g, label
-end
 
 function maximum_abs(vector)
     return maximum(abs.(vector))
@@ -165,15 +96,12 @@ function compile(file_prefix; vtree_type=:balanced, output_file="sdd_compilation
     file_name = split_file[length(split_file)]
 
     results_file =  open(output_file,"a")
-    write(results_file, "$file_name & $circuit_nodes & $circuit_edges & $elapsed_compilation & $mc & $compression_rate\n")
-
-    t = plot(circuit; simplify=true)
-    TikzPictures.save(PDF("circuit_$file_name.pdf"), t)
+    write(results_file, "$circuit_nodes & $circuit_edges & $elapsed_compilation\n")
 end
 
 vree_type = :balanced
 output_file = "sdd_compilation_results.txt"
-names_dict = Dict(1 => "b(1)", -1 => "¬b(1)", 2 => "a(1)", -2 => "¬a(1)", 3 => "x(1)", -3 => "¬x(1)", 4 => "y(1,0)", -4 => "¬y(1,0)", 5 => "y(1,1)", -5 => "¬y(1,1)")
+
 if ((length(ARGS) <= 1) || (length(ARGS) > 3))
     println("Usage: julia sdd_compilation.jl <file_prefix> [b/r/l/r] [output_file]")
     exit(1)
